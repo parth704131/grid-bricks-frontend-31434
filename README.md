@@ -21,6 +21,8 @@ npm run dev
 ```
 
 The dashboard runs at `http://localhost:5173`. Set `VITE_API_BASE_URL` to the FastAPI URL in `.env`.
+The detailed period table uses the backend's paginated `/api/v1/analysis/periods` endpoint
+with 20 rows per page; aggregate metrics and charts use `/api/v1/analysis`.
 
 ## Verification
 
