@@ -501,13 +501,6 @@ button:disabled {
   color: #9b2c2c;
 }
 
-.sort-control {
-  align-items: center;
-  display: flex;
-  gap: 8px;
-  grid-template-columns: none;
-}
-
 .table-scroll {
   margin-top: 20px;
   overflow-x: auto;

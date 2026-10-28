@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 
 import { useAnalysis } from "../hooks/useAnalysis";
 import { useAnalysisPeriods } from "../hooks/useAnalysisPeriods";
@@ -45,26 +45,19 @@ export function DashboardPage() {
   const [filters, setFilters] = useState<Filters>(readFilters);
   const [draft, setDraft] = useState<Filters>(filters);
   const [displayTimezone, setDisplayTimezone] = useState<DisplayTimezone>("uk");
-  const [selectedSort, setSelectedSort] = useState<"time" | "error">("time");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedPoint, setSelectedPoint] = useState<SeriesPoint | null>(null);
   const analysis = useAnalysis({ ...filters, timezone: "Europe/London" });
   const filterValid = isValidFilterRange(draft.from, draft.to) && isValidDecisionTime(draft.decisionTime);
 
   const periods = useAnalysisPeriods({ ...filters, timezone: "Europe/London", page: currentPage, pageSize: PAGE_SIZE });
-  const sortedSeries = useMemo(() => {
-    const series = periods.data?.series ?? [];
-    return [...series].sort((left, right) => {
-      if (selectedSort === "error") return (right.absoluteErrorMw ?? -1) - (left.absoluteErrorMw ?? -1);
-      return left.startTime.localeCompare(right.startTime);
-    });
-  }, [periods.data?.series, selectedSort]);
+  const pageSeries = periods.data?.series ?? [];
   const pageCount = periods.data?.pagination.totalPages ?? 1;
   const totalItems = periods.data?.pagination.totalItems ?? 0;
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [filters, selectedSort]);
+  }, [filters]);
 
   function applyFilters(event: FormEvent) {
     event.preventDefault();
@@ -132,9 +125,9 @@ export function DashboardPage() {
         {(analysis.data.coverage.percentage < 100 || analysis.data.warnings.length > 0) && <section className="warning-panel" role="status"><strong>Partial data</strong><span>{analysis.data.coverage.matchedPeriods} of {analysis.data.coverage.expectedPeriods} periods were matched. Missing periods are excluded from accuracy metrics.</span>{analysis.data.warnings.map((warning) => <span key={warning}>{warning}</span>)}</section>}
 
         <section className="table-card" id="periods" aria-labelledby="periods-title">
-          <div className="section-heading"><div><p className="eyebrow">Delivery periods</p><h2 id="periods-title">Half-hourly comparison</h2></div><label className="sort-control">Sort<select value={selectedSort} onChange={(event) => setSelectedSort(event.target.value as "time" | "error")}><option value="time">Delivery time</option><option value="error">Absolute error</option></select></label></div>
+          <div className="section-heading"><div><p className="eyebrow">Delivery periods</p><h2 id="periods-title">Half-hourly comparison</h2></div></div>
           {periods.isError && <div className="state-card error-state"><span>{periods.error.message}</span><button type="button" onClick={() => periods.refetch()}>Retry</button></div>}
-          <div className="table-scroll"><table><thead><tr><th>Delivery time</th><th>Forecast</th><th>Actual</th><th>Error</th><th>Error energy</th><th>Published</th><th>Status</th><th>Details</th></tr></thead><tbody>{sortedSeries.map((point) => <tr key={point.startTime}><td>{formatTimestamp(point.startTime, displayTimezone)}</td><td>{formatMw(point.forecastMw)}</td><td>{formatMw(point.actualMw)}</td><td>{formatSignedMw(point.errorMw)}</td><td>{formatMwh(point.energyErrorMwh)}</td><td>{point.forecastPublishTime ? formatTimestamp(point.forecastPublishTime, displayTimezone) : "—"}</td><td><span className={`status status-${point.status}`}>{point.status.replace("_", " ")}</span></td><td><button type="button" className="table-action" onClick={() => setSelectedPoint(point)}>Inspect</button></td></tr>)}</tbody></table></div>
+          <div className="table-scroll"><table><thead><tr><th>Delivery time</th><th>Forecast</th><th>Actual</th><th>Error</th><th>Error energy</th><th>Published</th><th>Status</th><th>Details</th></tr></thead><tbody>{pageSeries.map((point) => <tr key={point.startTime}><td>{formatTimestamp(point.startTime, displayTimezone)}</td><td>{formatMw(point.forecastMw)}</td><td>{formatMw(point.actualMw)}</td><td>{formatSignedMw(point.errorMw)}</td><td>{formatMwh(point.energyErrorMwh)}</td><td>{point.forecastPublishTime ? formatTimestamp(point.forecastPublishTime, displayTimezone) : "—"}</td><td><span className={`status status-${point.status}`}>{point.status.replace("_", " ")}</span></td><td><button type="button" className="table-action" onClick={() => setSelectedPoint(point)}>Inspect</button></td></tr>)}</tbody></table></div>
           <div className="pagination" aria-label="Period table pagination"><span>Showing {totalItems === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, totalItems)} of {totalItems}</span><div><button type="button" className="secondary-button" disabled={currentPage === 1 || periods.isFetching} onClick={() => setCurrentPage((page) => page - 1)}>Previous</button><span className="page-number">Page {currentPage} of {pageCount}</span><button type="button" className="secondary-button" disabled={currentPage === pageCount || periods.isFetching} onClick={() => setCurrentPage((page) => page + 1)}>Next</button></div></div>
         </section>
         <ForecastVersionsDrawer point={selectedPoint} decisionTime={filters.decisionTime} onClose={() => setSelectedPoint(null)} />
