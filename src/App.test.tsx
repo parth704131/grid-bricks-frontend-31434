@@ -13,6 +13,6 @@ describe("App", () => {
     );
 
     expect(screen.getByRole("heading", { name: "Wind Procurement Insight" })).toBeInTheDocument();
-    expect(screen.getByText("UK day-ahead wind forecast performance")).toBeInTheDocument();
+    expect(screen.getByText("A clearer view of what the market knew—and when.")).toBeInTheDocument();
   });
 });

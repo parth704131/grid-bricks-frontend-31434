@@ -1,10 +1,11 @@
+import { memo, useMemo } from "react";
 import { Bar, BarChart, CartesianGrid, Cell, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 import type { SeriesPoint } from "../../types/api";
 import { formatMw, formatTimestamp } from "../../utils/format";
 
-export function ForecastErrorChart({ series }: { series: SeriesPoint[] }) {
-  const data = series.map((point) => ({ ...point, label: formatTimestamp(point.startTime), error: point.errorMw }));
+export const ForecastErrorChart = memo(function ForecastErrorChart({ series }: { series: SeriesPoint[] }) {
+  const data = useMemo(() => series.map((point) => ({ ...point, label: formatTimestamp(point.startTime), error: point.errorMw })), [series]);
   return (
     <section className="chart-card" aria-labelledby="forecast-error-title">
       <div className="section-heading"><div><p className="eyebrow">Forecast miss</p><h2 id="forecast-error-title">Error by delivery period</h2></div></div>
@@ -24,4 +25,4 @@ export function ForecastErrorChart({ series }: { series: SeriesPoint[] }) {
       </div>
     </section>
   );
-}
+});

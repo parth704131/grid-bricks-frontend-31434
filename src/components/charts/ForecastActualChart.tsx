@@ -1,15 +1,16 @@
+import { memo, useMemo } from "react";
 import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 import type { SeriesPoint } from "../../types/api";
 import { formatMw, formatTimestamp } from "../../utils/format";
 
-export function ForecastActualChart({ series }: { series: SeriesPoint[] }) {
-  const data = series.map((point) => ({
+export const ForecastActualChart = memo(function ForecastActualChart({ series }: { series: SeriesPoint[] }) {
+  const data = useMemo(() => series.map((point) => ({
     ...point,
     label: formatTimestamp(point.startTime),
     forecast: point.forecastMw,
     actual: point.actualMw,
-  }));
+  })), [series]);
   return (
     <section className="chart-card" aria-labelledby="forecast-actual-title">
       <div className="section-heading"><div><p className="eyebrow">Generation comparison</p><h2 id="forecast-actual-title">Forecast versus actual</h2></div></div>
@@ -28,4 +29,4 @@ export function ForecastActualChart({ series }: { series: SeriesPoint[] }) {
       </div>
     </section>
   );
-}
+});

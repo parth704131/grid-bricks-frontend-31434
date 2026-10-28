@@ -82,18 +82,11 @@ export function DashboardPage() {
   }
 
   return (
-    <main className="dashboard-shell">
-      <header className="dashboard-header">
-        <div>
-          <p className="eyebrow">ELEXON · WIND OPERATIONS</p>
-          <h1>Wind Procurement Insight</h1>
-          <p className="subtitle">UK day-ahead wind forecast performance</p>
-        </div>
-        <div className="freshness">
-          <span>Data source: Elexon</span>
-          <strong>{analysis.data ? `Data as of ${formatTimestamp(analysis.data.dataAsOf, displayTimezone)}` : "Data freshness pending"}</strong>
-        </div>
-      </header>
+    <main className="dashboard-shell" id="overview">
+        <header className="dashboard-header">
+          <div className="header-copy"><p className="eyebrow">ELEXON · WIND OPERATIONS</p><h1>Wind Procurement Insight</h1><p className="subtitle">A clearer view of what the market knew—and when.</p></div>
+          <div className="header-meta"><span className="freshness-pill"><span className="live-dot" />Historical data</span><div className="freshness"><span>Data source: Elexon</span><strong>{analysis.data ? `Data as of ${formatTimestamp(analysis.data.dataAsOf, displayTimezone)}` : "Data freshness pending"}</strong></div></div>
+        </header>
 
       <section className="controls-card" aria-labelledby="controls-title">
         <div className="section-heading">
@@ -127,7 +120,7 @@ export function DashboardPage() {
           <MetricCard label="Systematic bias" value={formatSignedMw(analysis.data.summary.biasMw)} description="Positive means wind was overforecast" />
           <MetricCard label="P90 error" value={formatMw(analysis.data.summary.p90AbsoluteErrorMw)} description="90% of matched errors are below this" />
           <MetricCard label="Data coverage" value={formatPercentage(analysis.data.coverage.percentage)} description={`${analysis.data.coverage.matchedPeriods} of ${analysis.data.coverage.expectedPeriods} periods matched`} />
-          <MetricCard label="Net error energy" value={formatMwh(analysis.data.summary.positiveErrorMwh + analysis.data.summary.negativeErrorMwh)} description="Signed half-hourly forecast error energy" />
+          <MetricCard label="Net error energy" value={formatMwh(analysis.data.summary.positiveErrorMwh + analysis.data.summary.negativeErrorMwh)} description={`Positive: ${formatMwh(analysis.data.summary.positiveErrorMwh)} · Negative: ${formatMwh(analysis.data.summary.negativeErrorMwh)}`} />
         </section>
 
         <section className="charts-grid" aria-label="Forecast analysis charts">
@@ -138,7 +131,7 @@ export function DashboardPage() {
 
         {(analysis.data.coverage.percentage < 100 || analysis.data.warnings.length > 0) && <section className="warning-panel" role="status"><strong>Partial data</strong><span>{analysis.data.coverage.matchedPeriods} of {analysis.data.coverage.expectedPeriods} periods were matched. Missing periods are excluded from accuracy metrics.</span>{analysis.data.warnings.map((warning) => <span key={warning}>{warning}</span>)}</section>}
 
-        <section className="table-card" aria-labelledby="periods-title">
+        <section className="table-card" id="periods" aria-labelledby="periods-title">
           <div className="section-heading"><div><p className="eyebrow">Delivery periods</p><h2 id="periods-title">Half-hourly comparison</h2></div><label className="sort-control">Sort<select value={selectedSort} onChange={(event) => setSelectedSort(event.target.value as "time" | "error")}><option value="time">Delivery time</option><option value="error">Absolute error</option></select></label></div>
           {periods.isError && <div className="state-card error-state"><span>{periods.error.message}</span><button type="button" onClick={() => periods.refetch()}>Retry</button></div>}
           <div className="table-scroll"><table><thead><tr><th>Delivery time</th><th>Forecast</th><th>Actual</th><th>Error</th><th>Error energy</th><th>Published</th><th>Status</th><th>Details</th></tr></thead><tbody>{sortedSeries.map((point) => <tr key={point.startTime}><td>{formatTimestamp(point.startTime, displayTimezone)}</td><td>{formatMw(point.forecastMw)}</td><td>{formatMw(point.actualMw)}</td><td>{formatSignedMw(point.errorMw)}</td><td>{formatMwh(point.energyErrorMwh)}</td><td>{point.forecastPublishTime ? formatTimestamp(point.forecastPublishTime, displayTimezone) : "—"}</td><td><span className={`status status-${point.status}`}>{point.status.replace("_", " ")}</span></td><td><button type="button" className="table-action" onClick={() => setSelectedPoint(point)}>Inspect</button></td></tr>)}</tbody></table></div>

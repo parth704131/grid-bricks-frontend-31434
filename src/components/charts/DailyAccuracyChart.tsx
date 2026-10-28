@@ -1,9 +1,10 @@
+import { memo } from "react";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 import type { AnalysisResponse } from "../../types/api";
 import { formatMw, formatPercentage } from "../../utils/format";
 
-export function DailyAccuracyChart({ daily }: { daily: AnalysisResponse["daily"] }) {
+export const DailyAccuracyChart = memo(function DailyAccuracyChart({ daily }: { daily: AnalysisResponse["daily"] }) {
   return (
     <section className="chart-card" aria-labelledby="daily-accuracy-title">
       <div className="section-heading"><div><p className="eyebrow">Daily performance</p><h2 id="daily-accuracy-title">Accuracy by delivery day</h2></div></div>
@@ -20,4 +21,4 @@ export function DailyAccuracyChart({ daily }: { daily: AnalysisResponse["daily"]
       </div>
     </section>
   );
-}
+});
