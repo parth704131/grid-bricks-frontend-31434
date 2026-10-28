@@ -1,11 +1,11 @@
 import { FormEvent, useEffect, useState } from "react";
 
 import { useAnalysis } from "../hooks/useAnalysis";
-import { useAnalysisPeriods } from "../hooks/useAnalysisPeriods";
 import { DailyAccuracyChart } from "../components/charts/DailyAccuracyChart";
 import { ForecastActualChart } from "../components/charts/ForecastActualChart";
 import { ForecastErrorChart } from "../components/charts/ForecastErrorChart";
 import { ForecastVersionsDrawer } from "../components/dashboard/ForecastVersionsDrawer";
+import { DashboardSkeleton } from "../components/dashboard/DashboardSkeleton";
 import type { SeriesPoint } from "../types/api";
 import { formatMwh, formatMw, formatPercentage, formatSignedMw, formatTimestamp } from "../utils/format";
 import { DEFAULT_FILTERS, isValidDecisionTime, isValidFilterRange } from "../utils/validation";
@@ -50,10 +50,10 @@ export function DashboardPage() {
   const analysis = useAnalysis({ ...filters, timezone: "Europe/London" });
   const filterValid = isValidFilterRange(draft.from, draft.to) && isValidDecisionTime(draft.decisionTime);
 
-  const periods = useAnalysisPeriods({ ...filters, timezone: "Europe/London", page: currentPage, pageSize: PAGE_SIZE });
-  const pageSeries = periods.data?.series ?? [];
-  const pageCount = periods.data?.pagination.totalPages ?? 1;
-  const totalItems = periods.data?.pagination.totalItems ?? 0;
+  const allSeries = analysis.data?.series ?? [];
+  const pageSeries = allSeries.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  const pageCount = Math.max(1, Math.ceil(allSeries.length / PAGE_SIZE));
+  const totalItems = allSeries.length;
 
   useEffect(() => {
     setCurrentPage(1);
@@ -104,7 +104,7 @@ export function DashboardPage() {
         <span>The latest wind forecast published before the previous-day cutoff is compared with actual generation. Positive error means wind was overforecast; negative error means it was underforecast.</span>
       </section>
 
-      {analysis.isPending && <section className="state-card" role="status">Loading January analysis…</section>}
+      {analysis.isPending && !analysis.data && <DashboardSkeleton />}
       {analysis.isError && <section className="state-card error-state"><strong>Analysis unavailable</strong><span>{analysis.error.message}</span><button type="button" onClick={() => analysis.refetch()}>Retry</button></section>}
       {analysis.data && <>
         <section className="metrics-grid" aria-label="Accuracy summary">
@@ -126,9 +126,8 @@ export function DashboardPage() {
 
         <section className="table-card" id="periods" aria-labelledby="periods-title">
           <div className="section-heading"><div><p className="eyebrow">Delivery periods</p><h2 id="periods-title">Half-hourly comparison</h2></div></div>
-          {periods.isError && <div className="state-card error-state"><span>{periods.error.message}</span><button type="button" onClick={() => periods.refetch()}>Retry</button></div>}
           <div className="table-scroll"><table><thead><tr><th>Delivery time</th><th>Forecast</th><th>Actual</th><th>Error</th><th>Error energy</th><th>Published</th><th>Status</th><th>Details</th></tr></thead><tbody>{pageSeries.map((point) => <tr key={point.startTime}><td>{formatTimestamp(point.startTime, displayTimezone)}</td><td>{formatMw(point.forecastMw)}</td><td>{formatMw(point.actualMw)}</td><td>{formatSignedMw(point.errorMw)}</td><td>{formatMwh(point.energyErrorMwh)}</td><td>{point.forecastPublishTime ? formatTimestamp(point.forecastPublishTime, displayTimezone) : "—"}</td><td><span className={`status status-${point.status}`}>{point.status.replace("_", " ")}</span></td><td><button type="button" className="table-action" onClick={() => setSelectedPoint(point)}>Inspect</button></td></tr>)}</tbody></table></div>
-          <div className="pagination" aria-label="Period table pagination"><span>Showing {totalItems === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, totalItems)} of {totalItems}</span><div><button type="button" className="secondary-button" disabled={currentPage === 1 || periods.isFetching} onClick={() => setCurrentPage((page) => page - 1)}>Previous</button><span className="page-number">Page {currentPage} of {pageCount}</span><button type="button" className="secondary-button" disabled={currentPage === pageCount || periods.isFetching} onClick={() => setCurrentPage((page) => page + 1)}>Next</button></div></div>
+          <div className="pagination" aria-label="Period table pagination"><span>Showing {totalItems === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, totalItems)} of {totalItems}</span><div><button type="button" className="secondary-button" disabled={currentPage === 1 || analysis.isFetching} onClick={() => setCurrentPage((page) => page - 1)}>Previous</button><span className="page-number">Page {currentPage} of {pageCount}</span><button type="button" className="secondary-button" disabled={currentPage === pageCount || analysis.isFetching} onClick={() => setCurrentPage((page) => page + 1)}>Next</button></div></div>
         </section>
         <ForecastVersionsDrawer point={selectedPoint} decisionTime={filters.decisionTime} onClose={() => setSelectedPoint(null)} />
       </>}

@@ -55,20 +55,6 @@ export const analysisResponseSchema = z.object({
 export type AnalysisResponse = z.infer<typeof analysisResponseSchema>;
 export type SeriesPoint = z.infer<typeof seriesPointSchema>;
 
-export const analysisPeriodsResponseSchema = z.object({
-  period: z.object({ from: z.string(), to: z.string() }),
-  decisionPolicy: decisionPolicySchema,
-  series: z.array(seriesPointSchema),
-  pagination: z.object({
-    page: z.number(),
-    pageSize: z.number(),
-    totalItems: z.number(),
-    totalPages: z.number(),
-  }),
-  dataAsOf: z.string(),
-});
-export type AnalysisPeriodsResponse = z.infer<typeof analysisPeriodsResponseSchema>;
-
 export const forecastVersionSchema = z.object({
   publishTime: z.string(),
   generationMw: z.number(),
