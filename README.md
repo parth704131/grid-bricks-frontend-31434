@@ -20,9 +20,7 @@ npm install
 npm run dev
 ```
 
-The dashboard runs at `http://localhost:5173`. Set `VITE_API_BASE_URL` to the FastAPI URL in `.env`.
-The detailed period table uses the backend's paginated `/api/v1/analysis/periods` endpoint
-with 20 rows per page; aggregate metrics and charts use `/api/v1/analysis`.
+The dashboard runs at `http://localhost:5173`. Set `VITE_API_BASE_URL` to the FastAPI URL in `.env`. It loads the complete `series` from `/api/v1/analysis`, uses that data for aggregate metrics and charts, and paginates the detailed table in the browser with 20 rows per page.
 
 ## Verification
 
@@ -39,7 +37,7 @@ docker build -t grid-bricks-frontend .
 docker run --rm -p 5173:5173 --env VITE_API_BASE_URL=http://localhost:8000 grid-bricks-frontend
 ```
 
-The repository-level Docker Compose integration will be added when the frontend dashboard is connected to the backend service.
+The frontend can be run alongside the backend Docker Compose service. The dashboard loads analysis data from the configured FastAPI URL.
 
 ## Deployment
 
