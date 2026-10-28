@@ -5,6 +5,7 @@ import { DailyAccuracyChart } from "../components/charts/DailyAccuracyChart";
 import { ForecastActualChart } from "../components/charts/ForecastActualChart";
 import { ForecastErrorChart } from "../components/charts/ForecastErrorChart";
 import { ForecastVersionsDrawer } from "../components/dashboard/ForecastVersionsDrawer";
+import { DashboardSkeleton } from "../components/dashboard/DashboardSkeleton";
 import type { SeriesPoint } from "../types/api";
 import { formatMwh, formatMw, formatPercentage, formatSignedMw, formatTimestamp } from "../utils/format";
 import { DEFAULT_FILTERS, isValidDecisionTime, isValidFilterRange } from "../utils/validation";
@@ -103,7 +104,7 @@ export function DashboardPage() {
         <span>The latest wind forecast published before the previous-day cutoff is compared with actual generation. Positive error means wind was overforecast; negative error means it was underforecast.</span>
       </section>
 
-      {analysis.isPending && <section className="state-card" role="status">Loading January analysis…</section>}
+      {analysis.isPending && !analysis.data && <DashboardSkeleton />}
       {analysis.isError && <section className="state-card error-state"><strong>Analysis unavailable</strong><span>{analysis.error.message}</span><button type="button" onClick={() => analysis.refetch()}>Retry</button></section>}
       {analysis.data && <>
         <section className="metrics-grid" aria-label="Accuracy summary">
